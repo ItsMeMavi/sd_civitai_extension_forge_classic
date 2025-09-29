@@ -14,7 +14,7 @@ Manage and interact with your Forge-Classic SD instance right from Civitai
 ## Installation
 
 ### Through the Extensions UI (Recommended)
-1. Open the Extensions Tab in Automatic1111 SD Web UI
+1. Open the Extensions Tab in Forge-Classic SD Web UI
 2. In the Extension Tab Open the "Instal from URL" tab
 3. Paste `https://github.com/ItsMeMavi/sd_civitai_extension_forge_classic.git` into the URL input
 4. Press install and wait for it to complete
