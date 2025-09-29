@@ -151,9 +151,17 @@ def get_locon_dir():
         return get_lora_dir()
 
 def get_model_dir():
-    model_dir = shared.opts.data.get('civitai_folder_model', shared.cmd_opts.ckpt_dir)
-    if not model_dir: model_dir = shared.cmd_opts.ckpt_dir
-    if not model_dir: model_dir = sd_models.model_path
+    # First, try to get the custom folder path from the extension's settings
+    model_dir = shared.opts.data.get('civitai_folder_model', None)
+
+    # If no custom path, check if the main checkpoints directory list exists and is not empty
+    if not model_dir and hasattr(shared.cmd_opts, 'ckpt_dirs') and shared.cmd_opts.ckpt_dirs:
+        model_dir = shared.cmd_opts.ckpt_dirs[0]
+
+    # If there's still no path, fall back to the default model path
+    if not model_dir:
+        model_dir = sd_models.model_path
+
     return model_dir.strip()
 
 def get_automatic_type(type: str):
@@ -226,7 +234,7 @@ def load_resource_list(types=['LORA', 'LoCon', 'Hypernetwork', 'TextualInversion
         resources += get_resources_in_folder('LoCon', get_locon_dir(), ['pt', 'safetensors', 'ckpt'])
     if 'Hypernetwork' in types:
         resources = [r for r in resources if r['type'] != 'Hypernetwork']
-        resources += get_resources_in_folder('Hypernetwork', shared.cmd_opts.hypernetwork_dir, ['pt', 'safetensors', 'ckpt'])
+        # resources += get_resources_in_folder('Hypernetwork', shared.cmd_opts.hypernetwork_dir, ['pt', 'safetensors', 'ckpt'])
     if 'TextualInversion' in types:
         resources = [r for r in resources if r['type'] != 'TextualInversion']
         resources += get_resources_in_folder('TextualInversion', shared.cmd_opts.embeddings_dir, ['pt', 'bin', 'safetensors'])
@@ -388,12 +396,12 @@ def load_vae(resource: ResourceRequest, on_progress=None):
     if isAvailable is None:
         sd_vae.refresh_vae_list()
 
-def load_hypernetwork(resource: ResourceRequest, on_progress=None):
-    full_path = os.path.join(shared.cmd_opts.hypernetwork_dir, resource['name']);
-    if not full_path.endswith('.pt'): full_path += '.pt'
-    isAvailable = load_if_missing(full_path, resource['url'], on_progress)
-    if isAvailable is None:
-        shared.reload_hypernetworks()
+# def load_hypernetwork(resource: ResourceRequest, on_progress=None):
+#     full_path = os.path.join(shared.cmd_opts.hypernetwork_dir, resource['name']);
+#     if not full_path.endswith('.pt'): full_path += '.pt'
+#     isAvailable = load_if_missing(full_path, resource['url'], on_progress)
+#     if isAvailable is None:
+#         shared.reload_hypernetworks()
 
 #endregion Downloading
 
@@ -431,22 +439,22 @@ def clear_vae():
     log('Clearing VAE')
     sd_vae.clear_loaded_vae()
 
-def select_hypernetwork(resource: ResourceRequest):
-    # TODO: find by hash instead of name
-    if shared.opts.sd_hypernetwork == resource['name']:
-        log('Hypernetwork already loaded')
-        return
-
-    full_path = os.path.join(shared.cmd_opts.hypernetwork_dir, resource['name']);
-    if not full_path.endswith('.pt'): full_path += '.pt'
-    isAvailable = load_if_missing(full_path, resource['url'])
-    if not isAvailable:
-        log('Could not find hypernetwork')
-        return
-
-    shared.opts.sd_hypernetwork = resource['name']
-    shared.opts.save(shared.config_filename)
-    shared.reload_hypernetworks()
+# def select_hypernetwork(resource: ResourceRequest):
+#     # TODO: find by hash instead of name
+#     if shared.opts.sd_hypernetwork == resource['name']:
+#         log('Hypernetwork already loaded')
+#         return
+#
+#     full_path = os.path.join(shared.cmd_opts.hypernetwork_dir, resource['name']);
+#     if not full_path.endswith('.pt'): full_path += '.pt'
+#     isAvailable = load_if_missing(full_path, resource['url'])
+#     if not isAvailable:
+#         log('Could not find hypernetwork')
+#         return
+#
+#     shared.opts.sd_hypernetwork = resource['name']
+#     shared.opts.save(shared.config_filename)
+#     shared.reload_hypernetworks()
 
 def clear_hypernetwork():
     if (shared.opts.sd_hypernetwork == 'None'): return
